@@ -43,17 +43,12 @@ fn water_in_view(host: &dyn Host, level: LevelRef, player: PlayerRef) -> Option<
 
 /// The server's answer to `PutDown` from `player`: what they carry goes into the water they look at.
 pub(crate) fn put_down_in_water(host: &mut dyn ServerHost, player: PlayerRef) {
-    let uuid = player.uuid();
-    let (Some(what), Some(level)) = (carried(host, uuid), player.level(host)) else {
+    let Some(level) = player.level(host) else { return };
+    let Some(spot) = water_in_view(host, level, player) else {
         return;
     };
-    let Some(pos) = water_in_view(host, level, player).filter(|&pos| !inside_player(host, player, pos)) else {
-        return;
-    };
-    let dimension = dimension_of(host, player).unwrap_or_default();
-    let facing = player.entity().direction(host);
-    if put_down(host, level, &dimension, pos, &what, facing) {
-        let _ = CARRIED.set(host, Holder::Player(uuid), None);
+    if let Some(mut world) = super::game::GameWorld::of(host, player.uuid()) {
+        super::logic::put_at(&mut world, player.uuid(), spot);
     }
 }
 

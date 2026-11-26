@@ -17,9 +17,11 @@ modules.
 - `src/config.rs`: the rules, `craftorio_carry.toml`, with its parser. The default text is
   `examples/craftorio_carry.toml`. It is a `Server` config: a dedicated server and the built-in server of
   single player both read it.
-- `src/server/`: the server decides every pick-up and put-down (`pick.rs`, `place.rs`), puts down into water on
-  the client's `PutDown` message (`water.rs`), slows a carrying player (`slowdown.rs`), and puts down what a
-  dying player carries (`mod.rs`).
+- `src/server/`: the server decides every pick-up and put-down. `logic.rs` has the rules, over the small
+  `World` of `world.rs`; `game.rs` answers `World` from the game, and `tests.rs` from a world in memory, so the
+  rules are tested without the game. `pick.rs` is the hooks' way in; `water.rs` puts down into water on the
+  client's `PutDown` message; `slowdown.rs` slows a carrying player; `mod.rs` reads the config and puts down
+  what a dying player carries.
 - `src/client/`: the client answers clicks while its player carries something, and reads what each player in
   view carries once a tick (`mod.rs`); it draws the load and the arms (`draw.rs`, `skin.rs`).
 - `src/client/look/`: the model layers and textures of each vanilla mob, by group. A mod cannot ask the game to
@@ -65,5 +67,7 @@ show it.
   `../horizon/crates/horizon-mod-vocab/src/hooks/`, host methods in `.../src/host/`, the generated event structs in
   `../horizon/target/*/build/horizon-mod-vocab/*/out/mod_api_generated.rs` (after any build of the game), the
   guides in `../horizon/docs/modding/src/`.
+- Test a change of the rules in `src/server/tests.rs` (a world in memory). What the game answers (`game.rs`)
+  and what is drawn (`src/client/`) are checked in game.
 - Visual numbers (offsets, angles, sizes in `render_hand`, `CarriedLayer`, `render_player_pre`) were tuned by
   the owner looking in game: change them only with a reason seen in game.

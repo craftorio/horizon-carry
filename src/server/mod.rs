@@ -3,10 +3,14 @@
 
 use crate::prelude::*;
 
+pub(crate) mod game;
+pub(crate) mod logic;
 pub(crate) mod pick;
-pub(crate) mod place;
 pub(crate) mod slowdown;
+#[cfg(test)]
+mod tests;
 pub(crate) mod water;
+pub(crate) mod world;
 
 /// Takes this mod's config. A file that does not parse is logged, and the rules from before stay.
 pub(crate) fn take_config(host: HostSide, file: &ConfigFile) {
@@ -29,25 +33,10 @@ pub(crate) fn death(host: &mut dyn ServerHost, event: &LivingDeathEvent<'_>) {
     let Some(entity) = host.entity(event.entity) else {
         return;
     };
-    let Some(uuid) = entity.uuid(host) else { return };
-    let Some(what) = carried(host, uuid) else { return };
-    let (Some(player), Some(level), Some([x, y, z])) =
-        (host.player(uuid), entity.level(host), entity.block_position(host))
-    else {
+    let (Some(uuid), Some(feet)) = (entity.uuid(host), entity.block_position(host)) else {
         return;
     };
-    let dimension = dimension_of(host, player).unwrap_or_default();
-    let free = |host: &dyn Host, pos| {
-        level
-            .block_state(host, pos)
-            .and_then(|s| host.block_states().replaceable(s))
-            == Some(true)
-    };
-    // a mob needs room for its whole body
-    let placed = (0..8)
-        .map(|up| [x, y + up, z])
-        .any(|pos| free(host, pos) && put_down(host, level, &dimension, pos, &what, None));
-    if placed {
-        let _ = CARRIED.set(host, Holder::Player(uuid), None);
+    if let Some(mut world) = game::GameWorld::of(host, uuid) {
+        logic::death(&mut world, uuid, feet);
     }
 }
