@@ -11,8 +11,9 @@ with the arms forward); a right click on a block puts it down; dying puts it dow
 - `src/lib.rs`: the hooks. The server decides every pick-up and put-down; the client only answers clicks while
   its player carries something and draws what is carried (it reads the synced `CARRIED` attachment in
   `client_tick_post`, since render hooks get no host to read it with).
-- `src/config.rs`: the server's rules, `craftorio_carry-server.toml` (per world in `serverconfig/`, else
-  `config/`), with its default text and the parser.
+- `src/config.rs`: the rules, `craftorio_carry-server.toml` (per world in `serverconfig/`, else `config/`), with
+  its default text and the parser. It is a `Server` config: a dedicated server and the built-in server of single
+  player both read it, so the rules work the same in both.
 - `horizon-mod.toml`: the manifest. `version` is compared at join: a Horizon server lets in only clients with
   exactly its mods and versions, so bump it with every change and ship client and server together.
 

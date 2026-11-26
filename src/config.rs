@@ -1,5 +1,6 @@
-//! The server's rules: `craftorio_carry-server.toml`, per world (`serverconfig/`, else `config/`), read again
-//! when it changes. A file that doesn't parse keeps the rules before it (the defaults at first).
+//! The rules: `craftorio_carry-server.toml`, for each world (`serverconfig/`, else `config/`), on a dedicated
+//! server and in single player (its built-in server). The game reads the file again when it changes. A file
+//! that does not parse keeps the rules from before (the defaults at first).
 
 use std::sync::RwLock;
 
