@@ -40,6 +40,10 @@ show it.
 
 ## Rules
 
+- All documentation is in Simplified English (in the spirit of ASD-STE100): `AGENTS.md`, `README.md`, doc
+  comments and comments in code, commit messages. Short sentences, one idea in each. Common words, and one word
+  for one thing. Active voice. No idioms.
+
 - Checks before finishing: `make check` (= `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`,
   `cargo test`). `make hooks` once per clone: `pre-commit` runs them, `commit-msg` rejects a `Co-authored-by`
   trailer.
