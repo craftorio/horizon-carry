@@ -1,18 +1,76 @@
 # Carry
 
-A mod for [Horizon](https://playhorizon.dev) (Minecraft 26.3 in Rust). It does what the Java mod Carry On does:
-you can carry blocks with contents and peaceful mobs.
+Carry is a mod for [Horizon](https://playhorizon.dev), Minecraft Java Edition 26.3 in Rust. It is inspired by
+the Java mod [Carry On](https://modrinth.com/mod/carry-on): you can pick up a block with its contents, or a
+peaceful mob, and carry it to a different place.
 
-Sneak with both hands empty. Right-click a chest, a furnace, a barrel or a cow. It goes out of the world, and you
-carry it in front of you. Right-click a block to put it down. A block keeps all its contents.
+## How to play
 
-The rules are in `craftorio_carry-server.toml`. They say which blocks and mobs you can pick up, if monsters and
-the pets of other players are allowed, and how much slower you walk. The game writes the file when it is not
-there. The rules are for each world, on a server and in single player (the world's own built-in server):
+1. Sneak, and keep both hands empty.
+2. Right-click a block that holds something (a chest, a furnace, a barrel) or a peaceful mob (a cow, a wolf, a
+   villager). It goes out of the world, and you carry it in front of you.
+3. Right-click a block to put it down next to that block. Right-click water to put a fish or a squid into it.
 
-- in `<world>/serverconfig/craftorio_carry-server.toml` for one world (`saves/<world>/` in single player);
-- else in `config/craftorio_carry-server.toml` of the server or the game folder, for all worlds.
+What you carry keeps all its data: the items in a chest, the name and the health of a mob, the owner of a pet.
 
-The game reads the file again when it changes. [AGENTS.md](AGENTS.md) tells how to build and release the mod.
+While you carry something:
 
-License: MIT.
+- you walk a quarter slower;
+- your hands are full: you cannot use items, hit, dig, change the hotbar slot or trade;
+- you see the load in your hands, and other players see it in front of you, with your arms forward;
+- if you die, the load stays where you died.
+
+A mob is put down only where its whole body fits. You cannot pick up a chest while a player looks into it.
+
+## Server rules
+
+The rules are in `craftorio_carry-server.toml`. The game writes this file with the default rules when it is not
+there. The default file, with a comment for each rule, is
+[`examples/craftorio_carry-server.toml`](examples/craftorio_carry-server.toml).
+
+You can set:
+
+- which blocks you can pick up: only blocks with contents, or all blocks that can be broken;
+- lists of blocks and mobs that you always can, or never can, pick up (an id can have one `*`);
+- if monsters, and the pets of other players, can be picked up;
+- how much slower a player walks with a load.
+
+The rules are for each world, on a dedicated server and in single player:
+
+- `<world>/serverconfig/craftorio_carry-server.toml` is for one world (`saves/<world>/` in single player);
+- else `config/craftorio_carry-server.toml` of the server or the game folder is for all worlds.
+
+The game reads the file again when it changes. If the file has an error, the old rules stay, and the server log
+tells the error.
+
+## Install
+
+On Craftorio, the launcher installs and turns on the mod. On a different Horizon install:
+
+1. Get `craftorio_carry.hmod` from the [releases](https://github.com/craftorio/horizon-carry/releases).
+2. Put it into the `horizon-mods/` folder of the game folder (the folder with `options.txt`), and of the server.
+3. Add the line `mod.craftorio_carry:true` to `horizon-mods.txt` in the same folder.
+
+The server and every player must have the same version of the mod. A Horizon server does not let in a player
+with different mods. The mod is WebAssembly: the game must have `horizon-wasm-std.wasm` next to its program.
+
+Each release is built for one Horizon build: the commit of
+[craftorio/horizon](https://github.com/craftorio/horizon) in [`HORIZON_COMMIT`](HORIZON_COMMIT).
+
+## Build
+
+You need a checkout of `craftorio/horizon` next to this one, as `../horizon`. Then:
+
+```sh
+make hooks   # once: the checks before each commit
+make check   # file length, formatting, clippy and tests
+```
+
+To make a release, change `version` in `horizon-mod.toml` and `Cargo.toml`, push the commit, and push the tag
+`v<version>`. The release workflow builds `craftorio_carry.hmod` and attaches it to the release.
+[AGENTS.md](AGENTS.md) tells more about the code and the release.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Carry is a new mod written in Rust. It does not use the code or the assets of
+Carry On.

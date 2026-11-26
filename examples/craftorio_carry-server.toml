@@ -1,0 +1,41 @@
+# Craftorio Carry: sneak with both hands empty and right-click a block or a mob to pick it up, right-click a
+# block to put it down. Ids may hold one * (any text): "minecraft:*_bed", "*_shulker_box".
+
+[blocks]
+# true: only blocks that hold something (a chest, a furnace, a barrel...); false: any block that can be broken
+only_with_contents = true
+# picked up even when only_with_contents would not let them
+allow = []
+# never picked up
+deny = [
+  "*_bed",
+  "minecraft:end_portal",
+  "minecraft:end_gateway",
+  "minecraft:spawner",
+  "minecraft:trial_spawner",
+  "minecraft:vault",
+  "minecraft:command_block",
+  "minecraft:chain_command_block",
+  "minecraft:repeating_command_block",
+  "minecraft:structure_block",
+  "minecraft:jigsaw",
+  "minecraft:moving_piston",
+  "minecraft:test_block",
+  "minecraft:test_instance_block",
+  "*_door",
+  "minecraft:piston_head",
+]
+
+[mobs]
+# whether monsters (zombies, creepers...) are picked up too
+monsters = false
+# whether a player picks up someone else's tamed pet
+other_players_pets = false
+# picked up even when monsters = false would not let them
+allow = []
+# never picked up (players never are)
+deny = ["minecraft:ender_dragon", "minecraft:wither", "minecraft:warden", "minecraft:elder_guardian"]
+
+[carrying]
+# how much slower a carrying player walks: 0.25 is a quarter slower, 0 not at all
+slowdown = 0.25

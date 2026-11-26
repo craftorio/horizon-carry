@@ -4,7 +4,8 @@
 
 use std::sync::RwLock;
 
-/// The file written when there is none: every rule with its default and what it means.
+/// The file written when there is none: every rule with its default and what it means. The repository has it as
+/// `examples/craftorio_carry-server.toml` (a test keeps the two the same; the package can not hold the file).
 pub const DEFAULT: &str = r#"# Craftorio Carry: sneak with both hands empty and right-click a block or a mob to pick it up, right-click a
 # block to put it down. Ids may hold one * (any text): "minecraft:*_bed", "*_shulker_box".
 
@@ -110,8 +111,7 @@ impl Rules {
 
     /// Whether a block `id` is picked up; `has_contents`: it has a block entity.
     pub fn block(&self, id: &str, has_contents: bool) -> bool {
-        !listed(&self.deny_blocks, id)
-            && (has_contents || !self.only_with_contents || listed(&self.allow_blocks, id))
+        !listed(&self.deny_blocks, id) && (has_contents || !self.only_with_contents || listed(&self.allow_blocks, id))
     }
 
     /// Whether a mob `kind` is picked up; `monster`: its type is an enemy.
@@ -124,25 +124,17 @@ impl Rules {
 
 /// Whether `id` matches one of `patterns`: equal, or around a single `*`.
 pub fn listed(patterns: &[String], id: &str) -> bool {
-    patterns
-        .iter()
-        .any(|pattern| match pattern.split_once('*') {
-            None => pattern == id,
-            Some((start, end)) => {
-                id.len() >= start.len() + end.len() && id.starts_with(start) && id.ends_with(end)
-            }
-        })
+    patterns.iter().any(|pattern| match pattern.split_once('*') {
+        None => pattern == id,
+        Some((start, end)) => id.len() >= start.len() + end.len() && id.starts_with(start) && id.ends_with(end),
+    })
 }
 
 static RULES: RwLock<Option<Rules>> = RwLock::new(None);
 
 /// The rules in force.
 pub fn rules() -> Rules {
-    if let Some(rules) = RULES
-        .read()
-        .unwrap_or_else(|poison| poison.into_inner())
-        .as_ref()
-    {
+    if let Some(rules) = RULES.read().unwrap_or_else(|poison| poison.into_inner()).as_ref() {
         return rules.clone();
     }
     Rules::parse(DEFAULT).expect("the default config parses")
@@ -158,6 +150,11 @@ pub fn load(text: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_example_is_the_default() {
+        assert_eq!(include_str!("../examples/craftorio_carry-server.toml"), DEFAULT);
+    }
 
     #[test]
     fn the_default_is_carry_on_s() {

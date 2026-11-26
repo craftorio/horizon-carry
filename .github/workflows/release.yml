@@ -43,6 +43,7 @@ jobs:
       - name: Checks
         working-directory: carry
         run: |
+          scripts/max-lines.sh
           cargo fmt --check
           cargo clippy --all-targets -- -D warnings
           cargo test
@@ -52,7 +53,10 @@ jobs:
           (cd horizon && cargo build --release --locked -p cargo-horizon-mod)
           work=horizon/target/craftorio-mods/carry
           mkdir -p "$work"
-          rsync -a --delete --exclude target --exclude .git --exclude mod.wasm --exclude Cargo.lock carry/ "$work/"
+          # only what the package is made of: the mod tool refuses other files (README, rustfmt.toml, examples)
+          for part in Cargo.toml horizon-mod.toml src assets data; do
+            if [[ -e "carry/$part" ]]; then cp -R "carry/$part" "$work/"; fi
+          done
           sed -i 's|path = "\.\./horizon/crates/horizon-mod-api"|path = "../../../crates/horizon-mod-api"|' "$work/Cargo.toml"
           (cd "$work" && ../../release/cargo-horizon-mod horizon-mod build --wasm)
           cp "$work/target/horizon-mod/craftorio_carry.hmod" .

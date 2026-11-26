@@ -1,7 +1,7 @@
 id = "craftorio_carry"
 name = "Carry"
-version = "0.4.3"
-description = "Sneak with both hands empty and right-click a chest (or another block with contents) or a peaceful mob to pick it up; right-click a block to put it down."
+version = "0.5.0"
+description = "Inspired by Carry On: sneak with both hands empty and right-click a chest (or another block with contents) or a peaceful mob to pick it up; right-click a block or water to put it down."
 api = "0.2"
 side = "both"
 capabilities = ["registries"]

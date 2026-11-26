@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Carry (`craftorio_carry`): a Horizon mod that does what the Java mod Carry On does. Horizon is Minecraft 26.3
+Carry (`craftorio_carry`): a Horizon mod inspired by the Java mod Carry On. Horizon is Minecraft 26.3
 rewritten in Rust (our fork: `craftorio/horizon`); this mod is Rust built to WebAssembly (`.hmod`) and runs on the
 Horizon server and on every client. Sneak with both hands empty and right-click a block with contents or a
 peaceful mob: it leaves the world and the player carries it (slowed, hands full, drawn in first and third person
@@ -8,12 +8,24 @@ with the arms forward); a right click on a block puts it down; dying puts it dow
 
 ## Layout
 
-- `src/lib.rs`: the hooks. The server decides every pick-up and put-down; the client only answers clicks while
-  its player carries something and draws what is carried (it reads the synced `CARRIED` attachment in
-  `client_tick_post`, since render hooks get no host to read it with).
-- `src/config.rs`: the rules, `craftorio_carry-server.toml` (per world in `serverconfig/`, else `config/`), with
-  its default text and the parser. It is a `Server` config: a dedicated server and the built-in server of single
-  player both read it, so the rules work the same in both.
+No Rust file is longer than 400 lines (`scripts/max-lines.sh`, part of `make check`). Split a longer one into
+modules.
+
+- `src/lib.rs`: the hooks. They only call the modules. `prelude` is what every module uses.
+- `src/carried.rs`: what a player carries (`Carried`), the `CARRIED` attachment and its codec.
+- `src/state.rs`: block states as text, and how a carried block is put down (facing, double chests).
+- `src/config.rs`: the rules, `craftorio_carry-server.toml`, with its parser. The default text is
+  `examples/craftorio_carry-server.toml`. It is a `Server` config: a dedicated server and the built-in server of
+  single player both read it.
+- `src/server/`: the server decides every pick-up and put-down (`pick.rs`, `place.rs`), puts down into water on
+  the client's `PutDown` message (`water.rs`), slows a carrying player (`slowdown.rs`), and puts down what a
+  dying player carries (`mod.rs`).
+- `src/client/`: the client answers clicks while its player carries something, and reads what each player in
+  view carries once a tick (`mod.rs`); it draws the load and the arms (`draw.rs`, `skin.rs`).
+- `src/client/look/`: the model layers and textures of each vanilla mob, by group. A mod cannot ask the game to
+  draw an entity in a 3D pass, so the rules of the vanilla renderers are written here. `tests.rs` checks every
+  living type that is not a monster against the game's resources:
+  `HORIZON_RESOURCES=<horizon-prepare output> cargo test every_mob -- --ignored`.
 - `horizon-mod.toml`: the manifest. `version` is compared at join: a Horizon server lets in only clients with
   exactly its mods and versions, so bump it with every change and ship client and server together.
 
@@ -45,8 +57,8 @@ show it.
   comments and comments in code, commit messages. Short sentences, one idea in each. Common words, and one word
   for one thing. Active voice. No idioms.
 
-- Checks before finishing: `make check` (= `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`,
-  `cargo test`). `make hooks` once per clone: `pre-commit` runs them, `commit-msg` rejects a `Co-authored-by`
+- Checks before finishing: `make check` (= `scripts/max-lines.sh`, `cargo fmt --check`,
+  `cargo clippy --all-targets -- -D warnings`, `cargo test`). `make hooks` once per clone: `pre-commit` runs them, `commit-msg` rejects a `Co-authored-by`
   trailer.
 - Commit only when asked. Never add `Co-Authored-By` (or any other AI attribution line) to commit messages.
 - Look up the mod API in the checkout, not from memory: hook declarations in

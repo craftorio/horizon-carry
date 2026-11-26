@@ -4,6 +4,7 @@ hooks:
 	git config core.hooksPath .githooks
 
 check:
+	scripts/max-lines.sh
 	cargo fmt --check
 	cargo clippy --all-targets -- -D warnings
 	cargo test
