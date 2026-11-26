@@ -1,6 +1,6 @@
 id = "craftorio_carry"
 name = "Carry"
-version = "0.4.1"
+version = "0.4.2"
 description = "Sneak with both hands empty and right-click a chest (or another block with contents) or a peaceful mob to pick it up; right-click a block to put it down."
 api = "0.2"
 side = "both"

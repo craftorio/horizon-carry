@@ -669,6 +669,79 @@ fn mob_look(name: &str, data: &Compound) -> Vec<(String, String, u32)> {
             }
             look
         }
+        // fish share entity/fish/; their models go by size
+        "cod" => vec![("cod".into(), "entity/fish/cod".into(), white)],
+        "salmon" => {
+            let layer = match read_string(data, "type").as_deref() {
+                Some("small") => "salmon_small",
+                Some("large") => "salmon_large",
+                _ => "salmon",
+            };
+            vec![(layer.into(), "entity/fish/salmon".into(), white)]
+        }
+        "pufferfish" => {
+            let layer = match data.get(&"PuffState".into()) {
+                Some(Tag::Int(2)) => "pufferfish_big",
+                Some(Tag::Int(1)) => "pufferfish_medium",
+                _ => "pufferfish_small",
+            };
+            vec![(layer.into(), "entity/fish/pufferfish".into(), white)]
+        }
+        "tropical_fish" => {
+            // `Variant`: the shape (0 small, 1 large), its pattern, the body's and the pattern's dye colours
+            let packed = match data.get(&"Variant".into()) {
+                Some(Tag::Int(v)) => *v as u32,
+                _ => 0,
+            };
+            let (size, letter) = if packed & 0xFF == 1 {
+                ("large", "b")
+            } else {
+                ("small", "a")
+            };
+            let dye = |shift: u32| {
+                DYES.get(((packed >> shift) & 0xFF) as usize)
+                    .copied()
+                    .unwrap_or(white)
+            };
+            let pattern = ((packed >> 8) & 0xFF) % 6 + 1;
+            vec![
+                (
+                    format!("tropical_fish_{size}"),
+                    format!("entity/fish/tropical_{letter}"),
+                    dye(16),
+                ),
+                (
+                    format!("tropical_fish_{size}#pattern"),
+                    format!("entity/fish/tropical_{letter}_pattern_{pattern}"),
+                    dye(24),
+                ),
+            ]
+        }
+        "glow_squid" => vec![(
+            format!("glow_squid{b}"),
+            format!("entity/squid/glow_squid{b}"),
+            white,
+        )],
+        "axolotl" => {
+            const NAMES: [&str; 5] = ["lucy", "wild", "gold", "cyan", "blue"];
+            let variant = match (v, data.get(&"Variant".into())) {
+                (Some(v), _) => v.to_owned(),
+                (None, Some(Tag::Int(i))) => {
+                    NAMES.get(*i as usize).copied().unwrap_or("lucy").to_owned()
+                }
+                _ => "lucy".to_owned(),
+            };
+            vec![(
+                format!("axolotl{b}"),
+                format!("entity/axolotl/axolotl_{variant}{b}"),
+                white,
+            )]
+        }
+        "frog" => vec![(
+            "frog".into(),
+            format!("entity/frog/frog_{}", v.unwrap_or("temperate")),
+            white,
+        )],
         _ => vec![(
             format!("{name}{b}"),
             format!("entity/{name}/{name}{b}"),
@@ -1291,6 +1364,40 @@ mod tests {
             )
         );
         assert_eq!(look("goat", &data(&[])), [pair("goat", "entity/goat/goat")]);
+        assert_eq!(look("cod", &data(&[])), [pair("cod", "entity/fish/cod")]);
+        assert_eq!(
+            look("salmon", &data(&[("type", string("large"))])),
+            [pair("salmon_large", "entity/fish/salmon")]
+        );
+        assert_eq!(
+            look("pufferfish", &data(&[("PuffState", Tag::Int(2))])),
+            [pair("pufferfish_big", "entity/fish/pufferfish")]
+        );
+        // a large fish with pattern 2, an orange (1) body and a white (0) pattern
+        let fish = mob_look(
+            "tropical_fish",
+            &data(&[("Variant", Tag::Int(1 | (1 << 8) | (1 << 16)))]),
+        );
+        assert_eq!(
+            fish[0],
+            (
+                "tropical_fish_large".to_owned(),
+                "entity/fish/tropical_b".to_owned(),
+                DYES[1]
+            )
+        );
+        assert_eq!(
+            fish[1],
+            (
+                "tropical_fish_large#pattern".to_owned(),
+                "entity/fish/tropical_b_pattern_2".to_owned(),
+                DYES[0]
+            )
+        );
+        assert_eq!(
+            look("axolotl", &data(&[("Variant", Tag::Int(3))])),
+            [pair("axolotl", "entity/axolotl/axolotl_cyan")]
+        );
     }
 
     #[test]
