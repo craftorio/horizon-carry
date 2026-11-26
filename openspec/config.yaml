@@ -1,0 +1,15 @@
+schema: spec-driven
+
+# What the AI is told when it writes this project's artifacts.
+context: |
+  Carry: a Horizon mod (Minecraft 26.3 in Rust, our fork craftorio/horizon) inspired by Carry On, in Rust built to WebAssembly, on the server and every client. Players pick up blocks with contents and peaceful mobs and carry them.
+  Read AGENTS.md first: its rules hold for the artifacts too.
+  Write every artifact (proposal, design, specs, tasks) in Simplified English, in the spirit of ASD-STE100:
+  short sentences, one idea in each, common words, one word for one thing, active voice, no idioms.
+
+rules:
+  proposal:
+    - When the owner decided something, say so with the date ("the owner's decision, 2026-11-27").
+    - Include a "Non-goals" section.
+  tasks:
+    - End with the checks of AGENTS.md, and how the change is shipped and checked (in game, on the dev server).
