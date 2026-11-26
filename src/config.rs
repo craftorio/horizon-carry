@@ -1,11 +1,15 @@
-//! The rules: `craftorio_carry-server.toml`, for each world (`serverconfig/`, else `config/`), on a dedicated
+//! The rules: `craftorio_carry.toml`, for each world (`serverconfig/`, else `config/`), on a dedicated
 //! server and in single player (its built-in server). The game reads the file again when it changes. A file
 //! that does not parse keeps the rules from before (the defaults at first).
 
 use std::sync::RwLock;
 
+/// The file's name. It is a `Server` config: read by the part of the game that runs the world, a dedicated server or
+/// the built-in server of single player, for each world. The client's drawing does not read it.
+pub const FILE: &str = "craftorio_carry.toml";
+
 /// The file written when there is none: every rule with its default and what it means. The repository has it as
-/// `examples/craftorio_carry-server.toml` (a test keeps the two the same; the package can not hold the file).
+/// `examples/craftorio_carry.toml` (a test keeps the two the same; the package can not hold the file).
 pub const DEFAULT: &str = r#"# Craftorio Carry: sneak with both hands empty and right-click a block or a mob to pick it up, right-click a
 # block to put it down. Ids may hold one * (any text): "minecraft:*_bed", "*_shulker_box".
 
@@ -153,7 +157,7 @@ mod tests {
 
     #[test]
     fn the_example_is_the_default() {
-        assert_eq!(include_str!("../examples/craftorio_carry-server.toml"), DEFAULT);
+        assert_eq!(include_str!("../examples/craftorio_carry.toml"), DEFAULT);
     }
 
     #[test]

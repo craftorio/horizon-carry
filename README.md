@@ -22,11 +22,11 @@ While you carry something:
 
 A mob is put down only where its whole body fits. You cannot pick up a chest while a player looks into it.
 
-## Server rules
+## Rules
 
-The rules are in `craftorio_carry-server.toml`. The game writes this file with the default rules when it is not
+The rules are in `craftorio_carry.toml`. The game writes this file with the default rules when it is not
 there. The default file, with a comment for each rule, is
-[`examples/craftorio_carry-server.toml`](examples/craftorio_carry-server.toml).
+[`examples/craftorio_carry.toml`](examples/craftorio_carry.toml).
 
 You can set:
 
@@ -35,10 +35,11 @@ You can set:
 - if monsters, and the pets of other players, can be picked up;
 - how much slower a player walks with a load.
 
-The rules are for each world, on a dedicated server and in single player:
+The part of the game that runs the world reads the rules: a dedicated server, or in single player the
+built-in server of your game. So the rules are the same in both, and they are for each world:
 
-- `<world>/serverconfig/craftorio_carry-server.toml` is for one world (`saves/<world>/` in single player);
-- else `config/craftorio_carry-server.toml` of the server or the game folder is for all worlds.
+- `<world>/serverconfig/craftorio_carry.toml` is for one world (`saves/<world>/` in single player);
+- else `config/craftorio_carry.toml` of the server or the game folder is for all worlds.
 
 The game reads the file again when it changes. If the file has an error, the old rules stay, and the server log
 tells the error.

@@ -14,8 +14,8 @@ modules.
 - `src/lib.rs`: the hooks. They only call the modules. `prelude` is what every module uses.
 - `src/carried.rs`: what a player carries (`Carried`), the `CARRIED` attachment and its codec.
 - `src/state.rs`: block states as text, and how a carried block is put down (facing, double chests).
-- `src/config.rs`: the rules, `craftorio_carry-server.toml`, with its parser. The default text is
-  `examples/craftorio_carry-server.toml`. It is a `Server` config: a dedicated server and the built-in server of
+- `src/config.rs`: the rules, `craftorio_carry.toml`, with its parser. The default text is
+  `examples/craftorio_carry.toml`. It is a `Server` config: a dedicated server and the built-in server of
   single player both read it.
 - `src/server/`: the server decides every pick-up and put-down (`pick.rs`, `place.rs`), puts down into water on
   the client's `PutDown` message (`water.rs`), slows a carrying player (`slowdown.rs`), and puts down what a

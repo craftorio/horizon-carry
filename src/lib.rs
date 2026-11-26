@@ -98,7 +98,7 @@ impl Hooks for Mod {
     fn register_configs(&self, _host: HostSide, event: &mut RegisterConfigsEvent<'_>) {
         event
             .configs
-            .push(Config::new(NAMESPACE, ConfigKind::Server, config::DEFAULT));
+            .push(Config::new(NAMESPACE, ConfigKind::Server, config::DEFAULT).file(config::FILE));
     }
 
     fn config_loading(&self, host: HostSide, event: &mut ConfigLoadingEvent<'_>) {
