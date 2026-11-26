@@ -619,6 +619,14 @@ const DYES: [u32; 16] = [
 
 /// The model layers (without `#main`) and textures a mob of `name` (`cow`) is drawn with, from its saved data:
 /// its variant, whether it is a baby, tamed or shorn, and its wool's colour.
+fn int(data: &Compound, key: &str) -> Option<i32> {
+    match data.get(&key.into()) {
+        Some(Tag::Int(v)) => Some(*v),
+        Some(Tag::Byte(v)) => Some(i32::from(*v)),
+        _ => None,
+    }
+}
+
 fn mob_look(name: &str, data: &Compound) -> Vec<(String, String, u32)> {
     let baby = matches!(data.get(&"Age".into()), Some(Tag::Int(age)) if *age < 0);
     let b = if baby { "_baby" } else { "" };
@@ -737,6 +745,159 @@ fn mob_look(name: &str, data: &Compound) -> Vec<(String, String, u32)> {
                 white,
             )]
         }
+        "horse" => {
+            const COLORS: [&str; 7] = [
+                "white",
+                "creamy",
+                "chestnut",
+                "brown",
+                "black",
+                "gray",
+                "darkbrown",
+            ];
+            const MARKINGS: [&str; 5] = ["", "white", "whitefield", "whitedots", "blackdots"];
+            let packed = int(data, "Variant").unwrap_or(0) as u32;
+            let color = v.unwrap_or_else(|| {
+                COLORS
+                    .get((packed & 0xFF) as usize)
+                    .copied()
+                    .unwrap_or("white")
+            });
+            let mut look = vec![(
+                format!("horse{b}"),
+                format!("entity/horse/horse_{color}{b}"),
+                white,
+            )];
+            if let Some(marks) = MARKINGS
+                .get(((packed >> 8) & 0xFF) as usize)
+                .filter(|m| !m.is_empty())
+            {
+                look.push((
+                    format!("horse{b}"),
+                    format!("entity/horse/horse_markings_{marks}{b}"),
+                    white,
+                ));
+            }
+            look
+        }
+        "donkey" | "mule" => vec![(
+            format!("{name}{b}"),
+            format!("entity/horse/{name}{b}"),
+            white,
+        )],
+        "skeleton_horse" => vec![(
+            format!("skeleton_horse{b}"),
+            format!("entity/horse/horse_skeleton{b}"),
+            white,
+        )],
+        "zombie_horse" => vec![(
+            format!("zombie_horse{b}"),
+            format!("entity/horse/horse_zombie{b}"),
+            white,
+        )],
+        "llama" | "trader_llama" => {
+            const COLORS: [&str; 4] = ["creamy", "white", "brown", "gray"];
+            let color = v.unwrap_or_else(|| {
+                COLORS
+                    .get(int(data, "Variant").unwrap_or(0) as usize)
+                    .copied()
+                    .unwrap_or("creamy")
+            });
+            vec![(
+                format!("{name}{b}"),
+                format!("entity/llama/llama_{color}{b}"),
+                white,
+            )]
+        }
+        "mooshroom" => {
+            let kind = read_string(data, "Type").unwrap_or_else(|| v.unwrap_or("red").to_owned());
+            vec![(
+                format!("mooshroom{b}"),
+                format!("entity/cow/mooshroom_{kind}{b}"),
+                white,
+            )]
+        }
+        "ocelot" => vec![(format!("ocelot{b}"), format!("entity/cat/ocelot{b}"), white)],
+        "parrot" => {
+            const COLORS: [&str; 5] = ["red_blue", "blue", "green", "yellow_blue", "grey"];
+            let color = v.unwrap_or_else(|| {
+                COLORS
+                    .get(int(data, "Variant").unwrap_or(0) as usize)
+                    .copied()
+                    .unwrap_or("red_blue")
+            });
+            vec![(
+                "parrot".into(),
+                format!("entity/parrot/parrot_{color}"),
+                white,
+            )]
+        }
+        "polar_bear" => vec![(
+            format!("polar_bear{b}"),
+            format!("entity/bear/polarbear{b}"),
+            white,
+        )],
+        "rabbit" => {
+            let kind = v.map(str::to_owned).unwrap_or_else(|| {
+                match int(data, "RabbitType").unwrap_or(0) {
+                    1 => "white",
+                    2 => "black",
+                    3 => "white_splotched",
+                    4 => "gold",
+                    5 => "salt",
+                    99 => "caerbannog",
+                    _ => "brown",
+                }
+                .to_owned()
+            });
+            vec![(
+                format!("rabbit{b}"),
+                format!("entity/rabbit/rabbit_{kind}{b}"),
+                white,
+            )]
+        }
+        "villager" => {
+            // `VillagerData`: its biome's clothes, its profession's over them, a badge of its level
+            let info = read_compound(data, "VillagerData").unwrap_or_default();
+            let id = |key| {
+                read_string(&info, key).map(|v| v.trim_start_matches("minecraft:").to_owned())
+            };
+            let kind = id("type").unwrap_or_else(|| "plains".into());
+            let model = format!("villager{b}");
+            let mut look = vec![(model.clone(), format!("entity/villager/villager{b}"), white)];
+            if baby {
+                look.push((model, format!("entity/villager/baby/{kind}"), white));
+            } else {
+                look.push((model.clone(), format!("entity/villager/type/{kind}"), white));
+                if let Some(job) = id("profession").filter(|p| p != "none") {
+                    look.push((
+                        model.clone(),
+                        format!("entity/villager/profession/{job}"),
+                        white,
+                    ));
+                    const LEVELS: [&str; 5] = ["stone", "iron", "gold", "emerald", "diamond"];
+                    let level = int(&info, "level").unwrap_or(1).clamp(1, 5) as usize;
+                    if job != "nitwit" {
+                        look.push((
+                            model,
+                            format!("entity/villager/profession_level/{}", LEVELS[level - 1]),
+                            white,
+                        ));
+                    }
+                }
+            }
+            look
+        }
+        "happy_ghast" => vec![(
+            format!("happy_ghast{b}"),
+            format!("entity/ghast/happy_ghast{b}"),
+            white,
+        )],
+        "sniffer" if baby => vec![(
+            "sniffer_baby".into(),
+            "entity/sniffer/snifflet".into(),
+            white,
+        )],
         "frog" => vec![(
             "frog".into(),
             format!("entity/frog/frog_{}", v.unwrap_or("temperate")),
@@ -840,7 +1001,9 @@ fn draw_shown(draw: &mut dyn BlockEntityDrawContext, shown: &Shown, size: f32) {
             for (part, texture, tint) in parts {
                 let mut part = (**part).clone();
                 wiggle(&mut part, time);
-                drew |= draw.model_part(&part, texture, *tint);
+                // a baby without a texture of its own wears the grown-up one
+                drew |= draw.model_part(&part, texture, *tint)
+                    || draw.model_part(&part, &texture.replace("_baby", ""), *tint);
             }
             draw.pop();
             if !drew && let Some(egg) = egg {
@@ -1364,6 +1527,21 @@ mod tests {
             )
         );
         assert_eq!(look("goat", &data(&[])), [pair("goat", "entity/goat/goat")]);
+        let job: Compound = [
+            ("type".into(), string("minecraft:snow")),
+            ("profession".into(), string("minecraft:farmer")),
+            ("level".into(), Tag::Int(3)),
+        ]
+        .into();
+        assert_eq!(
+            look("villager", &data(&[("VillagerData", Tag::Compound(job))])),
+            [
+                pair("villager", "entity/villager/villager"),
+                pair("villager", "entity/villager/type/snow"),
+                pair("villager", "entity/villager/profession/farmer"),
+                pair("villager", "entity/villager/profession_level/gold"),
+            ]
+        );
         assert_eq!(look("cod", &data(&[])), [pair("cod", "entity/fish/cod")]);
         assert_eq!(
             look("salmon", &data(&[("type", string("large"))])),
@@ -1397,6 +1575,68 @@ mod tests {
         assert_eq!(
             look("axolotl", &data(&[("Variant", Tag::Int(3))])),
             [pair("axolotl", "entity/axolotl/axolotl_cyan")]
+        );
+    }
+
+    /// Every living type that isn't a monster finds its model and texture in the game's resources (adult and baby):
+    /// `HORIZON_RESOURCES=<horizon-prepare output> cargo test every_mob -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn every_mob_has_a_look() {
+        use mod_api::serde_json::Value;
+        let root = std::path::PathBuf::from(
+            std::env::var("HORIZON_RESOURCES").expect("HORIZON_RESOURCES"),
+        );
+        let read = |name: &str| -> Value {
+            mod_api::serde_json::from_slice(&std::fs::read(root.join(name)).unwrap()).unwrap()
+        };
+        let (types, models) = (read("entity-types.json"), read("entity-models.json"));
+        let mut missing = Vec::new();
+        for (kind, info) in types.as_object().unwrap() {
+            let living = info
+                .get("attributes")
+                .is_some_and(|a| a.as_object().is_some_and(|a| !a.is_empty()));
+            if !living
+                || info["category"] == "monster"
+                || [
+                    "minecraft:player",
+                    "minecraft:armor_stand",
+                    "minecraft:mannequin",
+                ]
+                .contains(&kind.as_str())
+            {
+                continue;
+            }
+            let name = kind.trim_start_matches("minecraft:");
+            for age in [0, -24000] {
+                let data: Compound = [("Age".into(), Tag::Int(age))].into();
+                for (layer, texture, _) in mob_look(name, &data) {
+                    let layer = if layer.contains('#') {
+                        format!("minecraft:{layer}")
+                    } else {
+                        format!("minecraft:{layer}#main")
+                    };
+                    // as `shown` does: a baby without a model of its own is drawn as the grown-up one
+                    let grown = layer.replace("_baby", "");
+                    if models.get(&layer).is_none() && models.get(&grown).is_none() {
+                        missing.push(format!("{kind}: model {layer}"));
+                    }
+                    let file = |t: &str| {
+                        root.join(format!("assets/minecraft/textures/{t}.png"))
+                            .exists()
+                    };
+                    if !file(&texture) && !file(&texture.replace("_baby", "")) {
+                        missing.push(format!("{kind}: texture {texture}"));
+                    }
+                }
+            }
+        }
+        missing.dedup();
+        assert!(
+            missing.is_empty(),
+            "{} missing:\n{}",
+            missing.len(),
+            missing.join("\n")
         );
     }
 
