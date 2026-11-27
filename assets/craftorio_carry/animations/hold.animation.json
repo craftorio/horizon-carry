@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.craftorio_carry.hold": {
+			"loop": true,
+			"animation_length": 1,
+			"bones": {
+				"right_arm": {
+					"rotation": [-54.43, -8.59, 0]
+				},
+				"left_arm": {
+					"rotation": [-54.43, 8.59, 0]
+				}
+			}
+		}
+	}
+}

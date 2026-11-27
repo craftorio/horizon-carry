@@ -1,8 +1,9 @@
-//! The server: it decides every pick-up and put-down, keeps the hands of a carrying player full, and puts down
-//! what a dying player carries.
+//! The server: it decides every pick-up and put-down, keeps the hands of a carrying player full, puts down what a
+//! dying player carries, and holds the arms of a carrying player forward through JEA (`arms.rs`).
 
 use crate::prelude::*;
 
+pub(crate) mod arms;
 pub(crate) mod game;
 pub(crate) mod logic;
 pub(crate) mod pick;

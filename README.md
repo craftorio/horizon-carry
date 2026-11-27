@@ -17,10 +17,20 @@ While you carry something:
 
 - you walk a quarter slower;
 - your hands are full: you cannot use items, hit, dig, change the hotbar slot or trade;
-- you see the load in your hands, and other players see it in front of you, with your arms forward;
+- you see the load in your hands, and other players see it in front of you, with your arms forward (see
+  below);
 - if you die, the load stays where you died.
 
 A mob is put down only where its whole body fits. You cannot pick up a chest while a player looks into it.
+
+## The arms
+
+The arms of a carrying player go forward through the mod
+[Just Enough Animations](https://github.com/craftorio/horizon-jea) (JEA, the mod `jea`). The server plays the
+clip `craftorio_carry:hold` on the player (`assets/craftorio_carry/animations/hold.animation.json`), so the armour
+on the arms turns with them. The server and the clients need JEA for this. Without JEA, the arms of a carrying
+player hang. The load is still in front of them, and the rest of Carry works as usual. In first person, Carry
+draws the arms itself, so you see them without JEA too.
 
 ## Rules
 

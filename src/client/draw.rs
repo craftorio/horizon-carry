@@ -192,36 +192,3 @@ pub(crate) fn hand(host: &dyn ClientHost, event: &mut RenderHandEvent<'_, '_>) -
     event.cancelled = true;
     Flow::Cancel
 }
-
-/// In third person, a carrying player holds the arms forward: the model's arms are drawn here, posed, with the
-/// player's skin, and the model's own are left out. When no skin sprite draws, the model keeps its own arms.
-pub(crate) fn player(event: &mut RenderPlayerPreEvent<'_>) {
-    let (arms, crouching) = {
-        let view = view();
-        let view = view.as_ref();
-        (
-            view.and_then(|view| view.arms.get(&event.player.id).cloned()),
-            view.is_some_and(|view| view.crouching.contains(&event.player.id)),
-        )
-    };
-    let Some(mut arms) = arms else { return };
-    if crouching {
-        for part in [&mut arms.right, &mut arms.left] {
-            Arc::make_mut(part).y += CROUCH_ARMS_DOWN;
-        }
-    }
-    let draw = &mut *event.draw;
-    draw.push();
-    // the model's own frame, as `LivingEntityRenderer` and a player's 0.9375 scale give it
-    draw.scale([0.9375, -0.9375, -0.9375]);
-    draw.translate([0.0, -1.501, 0.0]);
-    let drew = arms
-        .sprites
-        .iter()
-        .any(|sprite| draw.model_part(&arms.right, sprite, 0xFFFFFF) && draw.model_part(&arms.left, sprite, 0xFFFFFF));
-    draw.pop();
-    if drew {
-        event.hidden.hide(HumanoidPart::RightArm);
-        event.hidden.hide(HumanoidPart::LeftArm);
-    }
-}

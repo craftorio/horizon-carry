@@ -4,7 +4,8 @@
 //! in its place when it is replaceable, as grass is). Dying puts it down where the player died.
 //!
 //! The server decides (`server`). The client answers the same clicks so that it does not open the chest that it
-//! is about to lose, and it draws what is carried (`client`). What a player carries is an attachment on the
+//! is about to lose, and it draws what is carried (`client`). The arms of a carrying player go forward through
+//! the mod Just Enough Animations (`server::arms`). What a player carries is an attachment on the
 //! player (`carried`): saved with them and synced to their client. The hooks here only call the modules.
 
 mod carried;
@@ -20,21 +21,22 @@ mod prelude {
     pub(crate) use crate::client::look::*;
     pub(crate) use crate::client::skin::*;
     pub(crate) use crate::client::*;
+    pub(crate) use crate::server::arms::*;
     pub(crate) use crate::server::pick::*;
     pub(crate) use crate::server::slowdown::*;
     pub(crate) use crate::state::*;
     pub(crate) use crate::{NAMESPACE, config};
     pub(crate) use mod_api::{
-        AttachmentCodec, AttachmentError, AttachmentType, AttackEntityEvent, AttributeModifier, AttributeOperation,
-        BlockClick, BlockEntityDrawContext, BlockUpdateFlags, BreakBlockEvent, ClientHost, ClientTickPostEvent,
-        Compound, Config, ConfigFile, ConfigKind, ConfigLoadingEvent, ConfigReloadingEvent, ConsoleLevel,
-        EntityInteractEvent, EntityRenderLayer, EntityRenderState, Flow, GameMode, Hand, Holder, Hooks, Host,
-        HostBlockStates, HostSide, HumanoidPart, Identifier, InteractionResult, ItemDisplayContext, ItemStack,
-        LayerTarget, LevelRef, LivingDeathEvent, ModelPart, ModifierLifetime, PayloadCodec, PayloadId,
+        AttachmentCodec, AttachmentError, AttachmentHolder, AttachmentQueries, AttachmentType, AttackEntityEvent,
+        AttributeModifier, AttributeOperation, BlockClick, BlockEntityDrawContext, BlockUpdateFlags, BreakBlockEvent,
+        ClientHost, ClientTickPostEvent, Compound, Config, ConfigFile, ConfigKind, ConfigLoadingEvent,
+        ConfigReloadingEvent, ConsoleLevel, EntityInteractEvent, EntityRenderLayer, EntityRenderState, Flow, GameMode,
+        Hand, Holder, Hooks, Host, HostBlockStates, HostSide, Identifier, InteractionResult, ItemDisplayContext,
+        ItemStack, LayerTarget, LevelRef, LivingDeathEvent, ModelPart, ModifierLifetime, PayloadCodec, PayloadId,
         PlayerLoggedOutEvent, PlayerRef, PlayerSwitchHotbarSlotPreEvent, PlayerTickPostEvent, PosedParts,
         RegisterConfigsEvent, RegisterEntityLayersEvent, Registrar, RegistrationContext, RenderHandEvent,
-        RenderPlayerPreEvent, RightClickBlockEvent, RightClickEmptyEvent, RightClickItemEvent, ServerHost, SoundSource,
-        Tag, ToServer, VarInt,
+        RightClickBlockEvent, RightClickEmptyEvent, RightClickItemEvent, ServerHost, SoundSource, Tag, ToServer,
+        VarInt,
     };
     pub(crate) use std::collections::{HashMap, HashSet};
     pub(crate) use std::sync::{Arc, Mutex};
@@ -142,11 +144,13 @@ impl Hooks for Mod {
     fn player_tick_post(&self, host: HostSide, event: &mut PlayerTickPostEvent) {
         if let HostSide::Server(host) = host {
             update_slowdown(host, event.player);
+            update_arms(host, event.player);
         }
     }
 
     fn player_logged_out(&self, _host: &mut dyn ServerHost, event: &mut PlayerLoggedOutEvent<'_>) {
         forget_slowdown(event.player);
+        forget_arms(event.player);
     }
 
     fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
@@ -156,11 +160,6 @@ impl Hooks for Mod {
 
     fn client_tick_post(&self, host: &mut dyn ClientHost, _event: &mut ClientTickPostEvent) {
         client::tick(host);
-    }
-
-    fn render_player_pre(&self, _host: &dyn ClientHost, event: &mut RenderPlayerPreEvent<'_>) -> Flow {
-        client::draw::player(event);
-        Flow::Continue
     }
 
     fn register_entity_layers(&self, _context: &RegistrationContext, event: &mut RegisterEntityLayersEvent<'_>) {

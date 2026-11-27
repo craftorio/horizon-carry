@@ -14,14 +14,13 @@ pub(crate) struct ClientView {
     pub(crate) shown: HashMap<u32, (Carried, Shown)>,
     /// Baked model layers by name (`minecraft:cow#main`), None for a layer the game hasn't.
     pub(crate) layers: HashMap<String, Option<Arc<ModelPart>>>,
-    /// The arms of each player in view who carries something, held forward: [`Arms`].
+    /// The arm parts of the player model, for this client's own player in first person: [`Arms`].
     pub(crate) arms: HashMap<u32, Arms>,
-    /// Which of them crouch: their arms and load go down and forward with the body, as vanilla's crouch does.
+    /// Which of them crouch: their load goes down and forward with the body, as vanilla's crouch moves the arms.
     pub(crate) crouching: HashSet<u32>,
 }
 
-/// How a crouch moves the arms (`HumanoidModel.setupAnim`: from 2 to 5.2 texels down) and what they hold.
-pub(crate) const CROUCH_ARMS_DOWN: f32 = 3.2;
+/// How a crouch moves the load in front of a player.
 pub(crate) const CROUCH_LOAD: [f32; 3] = [0.0, -0.2, 0.12];
 
 pub(crate) static VIEW: Mutex<Option<ClientView>> = Mutex::new(None);
@@ -44,25 +43,16 @@ pub(crate) fn client_carrying(host: &mut dyn ClientHost) -> bool {
     })
 }
 
-/// Reads what this client's player and every listed player carry.
+/// Reads what every player in this client's level carries: the rows of the synced attachment. A LAN guest did not
+/// see the load of the host when this read the players of the tab list.
 pub(crate) fn tick(host: &mut dyn ClientHost) {
     let local = host.local_player();
-    let mut players: Vec<u128> = host
-        .client_session()
-        .client_tab_list()
-        .map(|list| list.entries.iter().map(|e| e.uuid).collect())
-        .unwrap_or_default();
-    players.extend(local.map(PlayerRef::uuid));
     let mut carried_by = Vec::new();
-    for uuid in players {
-        let Some(player) = host.player(uuid) else { continue };
-        if let Some(what) = CARRIED
-            .get_existing(host, Holder::Player(uuid))
-            .ok()
-            .flatten()
-            .flatten()
-        {
-            carried_by.push((player, what));
+    if let Ok(batch) = host.query(&CARRIED) {
+        for row in batch.iter().flatten() {
+            if let (AttachmentHolder::Player(player), Some(what)) = (row.holder, row.value.clone()) {
+                carried_by.push((player, what));
+            }
         }
     }
     let mut view = view();
@@ -75,10 +65,11 @@ pub(crate) fn tick(host: &mut dyn ClientHost) {
         if player.entity().is_crouching(host) == Some(true) {
             view.crouching.insert(id);
         }
-        if let Some(held) = view
-            .arms
-            .remove(&id)
-            .or_else(|| arms_of(host, &mut view.layers, player))
+        if view.local == Some(id)
+            && let Some(held) = view
+                .arms
+                .remove(&id)
+                .or_else(|| arms_of(host, &mut view.layers, player))
         {
             arms.insert(id, held);
         }

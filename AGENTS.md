@@ -3,8 +3,9 @@
 Carry (`craftorio_carry`): a Horizon mod inspired by the Java mod Carry On. Horizon is Minecraft 26.3
 rewritten in Rust (our fork: `craftorio/horizon`); this mod is Rust built to WebAssembly (`.hmod`) and runs on the
 Horizon server and on every client. Sneak with both hands empty and right-click a block with contents or a
-peaceful mob: it leaves the world and the player carries it (slowed, hands full, drawn in first and third person
-with the arms forward); a right click on a block puts it down; dying puts it down where the player died.
+peaceful mob: it leaves the world and the player carries it (slowed, hands full, drawn in first and third person;
+in third person the arms go forward through the mod Just Enough Animations, JEA); a right click on a block puts it
+down; dying puts it down where the player died.
 
 ## Layout
 
@@ -20,10 +21,13 @@ modules.
 - `src/server/`: the server decides every pick-up and put-down. `logic.rs` has the rules, over the small
   `World` of `world.rs`; `game.rs` answers `World` from the game, and `tests.rs` from a world in memory, so the
   rules are tested without the game. `pick.rs` is the hooks' way in; `water.rs` puts down into water on the
-  client's `PutDown` message; `slowdown.rs` slows a carrying player; `mod.rs` reads the config and puts down
-  what a dying player carries.
+  client's `PutDown` message; `slowdown.rs` slows a carrying player; `arms.rs` holds their arms forward through
+  JEA (`/jea play` with `run_command`, the clip in `assets/craftorio_carry/animations/`); `mod.rs` reads the
+  config and puts down what a dying player carries.
 - `src/client/`: the client answers clicks while its player carries something, and reads what each player in
-  view carries once a tick (`mod.rs`); it draws the load and the arms (`draw.rs`, `skin.rs`).
+  view carries once a tick (`mod.rs`); it draws the load (`draw.rs`), and in first person the arms too
+  (`skin.rs`). It does not draw the arms in third person: JEA poses the model's own arms, so the
+  armour follows them.
 - `src/client/look/`: the model layers and textures of each vanilla mob, by group. A mod cannot ask the game to
   draw an entity in a 3D pass, so the rules of the vanilla renderers are written here. `tests.rs` checks every
   living type that is not a monster against the game's resources:
@@ -69,8 +73,8 @@ show it.
   guides in `../horizon/docs/modding/src/`.
 - Test a change of the rules in `src/server/tests.rs` (a world in memory). What the game answers (`game.rs`)
   and what is drawn (`src/client/`) are checked in game.
-- Visual numbers (offsets, angles, sizes in `render_hand`, `CarriedLayer`, `render_player_pre`) were tuned by
-  the owner looking in game: change them only with a reason seen in game.
+- Visual numbers (offsets, angles, sizes in `render_hand`, `CarriedLayer`, the clip `hold.animation.json`) were
+  tuned by the owner looking in game: change them only with a reason seen in game.
 
 ## Work by OpenSpec
 

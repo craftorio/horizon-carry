@@ -1,11 +1,10 @@
 [package]
 name = "craftorio-carry"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2024"
 publish = false
 
 [dependencies]
-sha1 = "0.10"
 toml = "1"
 # The mod API of the craftorio/horizon checkout beside this one, the one the shipped game is built from.
 horizon-mod-api = { path = "../horizon/crates/horizon-mod-api" }
